@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>CertifyFlow — Certificate Generator</title>
+
+  <!-- 1. Panggil jsPDF via CDN (tidak perlu download/npm) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- 2. Panggil JSZip (karena di kodinganmu ada 'new JSZip()') -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <header class="topbar">
+    <a href="#" class="brand">
+      <span class="brand-mark">C</span>
+      <span>CertifyFlow</span>
+    </a>
+
+    <div class="workspace-status">
+      <span class="status-dot"></span>
+      Local workspace
+    </div>
+  </header>
+
+
+  <main class="app">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+      <div class="eyebrow">
+        CERTIFICATE STUDIO
+      </div>
+
+      <h1>
+        Generate certificates without the repetitive work.
+      </h1>
+
+      <p class="intro">
+        Upload one design, import your participants,
+        then generate personalized certificates with
+        unique QR credentials.
+      </p>
+
+
+      <nav class="steps">
+
+        <button class="step active" data-step="1">
+          <span class="step-number">01</span>
+
+          <div>
+            <strong>Event</strong>
+            <small>Basic information</small>
+          </div>
+        </button>
+
+
+        <button class="step" data-step="2">
+          <span class="step-number">02</span>
+
+          <div>
+            <strong>Template</strong>
+            <small>Design & positioning</small>
+          </div>
+        </button>
+
+
+        <button class="step" data-step="3">
+          <span class="step-number">03</span>
+
+          <div>
+            <strong>Participants</strong>
+            <small>Import CSV</small>
+          </div>
+        </button>
+
+
+        <button class="step" data-step="4">
+          <span class="step-number">04</span>
+
+          <div>
+            <strong>Generate</strong>
+            <small>Preview & export</small>
+          </div>
+        </button>
+
+      </nav>
+
+
+      <div class="privacy-note">
+
+        <strong>Privacy</strong>
+
+        <p>
+          Participant data stays inside this browser
+          during this frontend prototype.
+        </p>
+
+      </div>
+
+    </aside>
+
+
+    <!-- MAIN WORKSPACE -->
+    <section class="workspace">
+
+      <div class="workspace-header">
+
+        <div>
+
+          <span class="section-kicker" id="sectionKicker">
+            01 / EVENT
+          </span>
+
+          <h2 id="sectionTitle">
+            Set up your event
+          </h2>
+
+        </div>
+
+
+        <div class="progress-container">
+
+          <span id="progressText">
+            1 of 4
+          </span>
+
+          <div class="progress">
+            <span id="progressBar"></span>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- STEP 1 -->
+      <section class="panel active" id="panel1">
+
+        <div class="form-grid">
+
+          <label class="field full">
+            <span>Event name</span>
+
+            <input
+              type="text"
+              id="eventName"
+              placeholder="Seminar Pasar Modal 2026"
+            >
+          </label>
+
+
+          <label class="field">
+            <span>Organizer</span>
+
+            <input
+              type="text"
+              id="organizer"
+              placeholder="Nama organisasi / kampus"
+            >
+          </label>
+
+
+          <label class="field">
+            <span>Event date</span>
+
+            <input
+              type="date"
+              id="eventDate"
+            >
+          </label>
+
+
+          <label class="field full">
+            <span>Certificate title</span>
+
+            <input
+              type="text"
+              id="certificateTitle"
+              value="Certificate of Participation"
+            >
+          </label>
+
+
+          <label class="field full">
+
+            <span>
+              Verification URL
+            </span>
+
+            <input
+              type="url"
+              id="verificationUrl"
+              value="https://your-domain.com/verify/"
+            >
+
+            <small>
+              QR akan berisi URL ini + credential ID.
+            </small>
+
+          </label>
+
+        </div>
+
+
+        <div class="actions">
+
+          <button
+            class="btn primary"
+            id="eventNext"
+          >
+            Continue to template
+            <span>→</span>
+          </button>
+
+        </div>
+
+      </section>
+
+
+      <!-- STEP 2 -->
+      <section class="panel" id="panel2">
+
+        <div class="template-layout">
+
+          <!-- CONTROLS -->
+          <div class="template-controls">
+
+            <div class="upload-box">
+
+              <input
+                type="file"
+                id="templateInput"
+                accept="image/png,image/jpeg,image/webp"
+              >
+
+              <div class="upload-icon">
+                ↑
+              </div>
+
+              <strong>
+                Upload certificate design
+              </strong>
+
+              <span>
+                PNG, JPG or WebP
+              </span>
+
+              <small id="templateName">
+                No template selected
+              </small>
+
+            </div>
+
+            <div class="control-section">
+  <div class="control-title">
+    CERTIFICATE SIZE
+  </div>
+
+  <label class="field">
+    <span>Preset Size (Canva)</span>
+    <select id="certSizeSelect">
+      <option value="a4_landscape" selected>A4 Landscape (29.7 x 21 cm)</option>
+      <option value="a4_portrait">A4 Portrait (21 x 29.7 cm)</option>
+      <option value="us_letter_landscape">US Letter Landscape (27.9 x 21.6 cm)</option>
+      <option value="fhd_1080p">Full HD Screen (1920 x 1080 px)</option>
+      <option value="f4_folio_landscape">F4 / Folio Landscape (33 x 21.5 cm)</option>
+      <option value="custom_image">Auto / Sesuai Resolusi Gambar (Pixel)</option>
+    </select>
+  </label>
+</div>
+
+
+            <div class="control-section">
+
+              <div class="control-title">
+                NAME FIELD
+              </div>
+
+
+              <label class="field">
+
+                <span>Font size</span>
+
+                <input
+                  type="number"
+                  id="nameSize"
+                  value="54"
+                  min="10"
+                  max="150"
+                >
+
+              </label>
+
+
+              <label class="field">
+
+                <span>Font</span>
+
+                <select id="nameFont">
+
+                  <option value="Manrope">
+                    Manrope
+                  </option>
+
+                  <option value="DM Sans">
+                    DM Sans
+                  </option>
+
+                  <option value="Georgia">
+                    Georgia
+                  </option>
+
+                  <option value="Arial">
+                    Arial
+                  </option>
+
+                  <option value="Times New Roman">
+                    Times New Roman
+                  </option>
+
+                </select>
+
+              </label>
+
+
+              <label class="field">
+
+                <span>Alignment</span>
+
+                <select id="nameAlign">
+
+                  <option value="center">
+                    Center
+                  </option>
+
+                  <option value="left">
+                    Left
+                  </option>
+
+                  <option value="right">
+                    Right
+                  </option>
+
+                </select>
+
+              </label>
+
+            </div>
+
+
+            <div class="control-section">
+
+              <div class="control-title">
+                QR CREDENTIAL
+              </div>
+
+
+              <label class="field">
+
+                <span>QR size</span>
+
+                <input
+                  type="number"
+                  id="qrSize"
+                  value="180"
+                  min="60"
+                  max="500"
+                >
+
+              </label>
+
+
+              <label class="field">
+
+                <span>QR label</span>
+
+                <input
+                  type="text"
+                  id="qrLabel"
+                  value="Scan to verify"
+                >
+
+              </label>
+
+            </div>
+
+          </div>
+
+
+          <!-- PREVIEW -->
+          <div class="preview-area">
+
+            <div class="preview-header">
+
+              <span>
+                Template preview
+              </span>
+
+              <small>
+                Drag NAME and QR to position them
+              </small>
+
+            </div>
+
+
+            <div class="canvas-container">
+
+              <canvas
+                id="certificateCanvas"
+                width="1200"
+                height="800"
+              ></canvas>
+
+
+              <div
+                class="canvas-placeholder"
+                id="canvasPlaceholder"
+              >
+                Upload a certificate design
+              </div>
+
+
+              <div
+                class="drag-element name-element"
+                id="nameElement"
+              >
+                NAME
+              </div>
+
+
+              <div
+                class="drag-element qr-element"
+                id="qrElement"
+              >
+                QR
+              </div>
+
+            </div>
+
+
+            <div class="position-info">
+
+              <span id="namePosition">
+                NAME x: 600 y: 400
+              </span>
+
+              <span id="qrPosition">
+                QR x: 1010 y: 650
+              </span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="actions between">
+
+          <button
+            class="btn secondary"
+            data-back
+          >
+            ← Back
+          </button>
+
+
+          <button
+            class="btn primary"
+            id="templateNext"
+          >
+            Continue to participants
+            <span>→</span>
+          </button>
+
+        </div>
+
+      </section>
+
+
+      <!-- STEP 3 -->
+      <section class="panel" id="panel3">
+
+        <div class="participants-layout">
+
+          <div>
+
+            <div class="upload-box csv-upload">
+
+              <input
+                type="file"
+                id="csvInput"
+                accept=".csv,text/csv"
+              >
+
+              <div class="upload-icon">
+                ↑
+              </div>
+
+              <strong>
+                Import participant CSV
+              </strong>
+
+              <span>
+                Required columns: name,email
+              </span>
+
+              <small id="csvName">
+                No CSV selected
+              </small>
+
+            </div>
+
+
+            <button
+              class="sample-button"
+              id="downloadSample"
+            >
+              Download sample CSV
+            </button>
+
+
+            <div class="csv-rules">
+
+              <strong>
+                Before generating
+              </strong>
+
+              <span>
+                • One participant per row
+              </span>
+
+              <span>
+                • Name and email are required
+              </span>
+
+              <span>
+                • Every participant receives a unique credential
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <div class="table-card">
+
+            <div class="table-header">
+
+              <strong id="participantCount">
+                0 participants
+              </strong>
+
+              <span id="csvStatus">
+                Waiting for CSV
+              </span>
+
+            </div>
+
+
+            <div class="table-scroll">
+
+              <table>
+
+                <thead>
+
+                  <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Credential</th>
+                  </tr>
+
+                </thead>
+
+                <tbody id="participantTable">
+
+                  <tr>
+                    <td
+                      colspan="4"
+                      class="empty-row"
+                    >
+                      Import CSV untuk melihat peserta.
+                    </td>
+                  </tr>
+
+                </tbody>
+
+              </table>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="actions between">
+
+          <button
+            class="btn secondary"
+            data-back
+          >
+            ← Back
+          </button>
+
+
+          <button
+            class="btn primary"
+            id="participantsNext"
+          >
+            Review & generate
+            <span>→</span>
+          </button>
+
+        </div>
+
+      </section>
+
+
+      <!-- STEP 4 -->
+      <section class="panel" id="panel4">
+
+        <div class="generation-layout">
+
+          <div class="review-card">
+
+            <div class="review-header">
+
+              <div>
+
+                <span class="section-kicker">
+                  READY TO GENERATE
+                </span>
+
+                <h3 id="reviewTitle">
+                  Certificate batch
+                </h3>
+
+              </div>
+
+              <span
+                class="count"
+                id="reviewCount"
+              >
+                0
+              </span>
+
+            </div>
+
+
+            <div class="review-list">
+
+              <div>
+                <span>Event</span>
+                <strong id="reviewEvent">—</strong>
+              </div>
+
+              <div>
+                <span>Organizer</span>
+                <strong id="reviewOrganizer">—</strong>
+              </div>
+
+              <div>
+                <span>Template</span>
+                <strong id="reviewTemplate">—</strong>
+              </div>
+
+              <div>
+                <span>Recipients</span>
+                <strong id="reviewRecipients">—</strong>
+              </div>
+
+              <div>
+                <span>Output</span>
+                <strong>PDF + ZIP</strong>
+              </div>
+
+            </div>
+
+
+            <button
+              class="btn primary full"
+              id="generateButton"
+            >
+              Generate certificates
+            </button>
+
+          </div>
+
+
+          <div class="result-card">
+
+            <div class="result-header">
+
+              <span class="section-kicker">
+                BATCH STATUS
+              </span>
+
+              <span
+                class="status-tag"
+                id="resultStatus"
+              >
+                Not started
+              </span>
+
+            </div>
+
+
+            <div class="generation-progress">
+
+              <span id="generationProgress"></span>
+
+            </div>
+
+
+            <div
+              class="result-number"
+              id="resultNumber"
+            >
+              0
+              <small>/ 0</small>
+            </div>
+
+
+            <p id="resultMessage">
+              Generated certificates will appear here.
+            </p>
+
+
+            <div class="result-actions">
+
+              <button
+                class="btn primary"
+                id="downloadZip"
+                disabled
+              >
+                Download ZIP
+              </button>
+
+              <button
+                class="btn secondary"
+                id="newBatch"
+              >
+                New batch
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="info-box">
+
+          <div class="info-icon">
+            i
+          </div>
+
+          <div>
+
+            <strong>
+              Email delivery belum diaktifkan
+            </strong>
+
+            <p>
+              Untuk versi ini sertifikat hanya dibuat dan
+              di-download. Pengiriman otomatis ke Gmail
+              akan ditambahkan melalui backend pada tahap
+              berikutnya.
+            </p>
+
+          </div>
+
+        </div>
+
+      </section>
+
+    </section>
+
+  </main>
+
+
+  <!-- LIBRARIES -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+
+  <script src="script.js"></script>
+
+</body>
+</html>
